@@ -1,14 +1,11 @@
 package br.com.boostsites.barbershop.shared.exception;
 
-import java.time.Instant;
-import java.util.Map;
+import java.time.LocalDateTime;
 
 public record ApiError(
-        Instant timestamp,
         int status,
         String error,
         String message,
-        String path,
-        Map<String, String> fieldErrors
+        LocalDateTime timestamp
 ) {
 }

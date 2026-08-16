@@ -44,28 +44,28 @@ public class BarberAvailability {
     public BarberAvailability(
             Barber barber,
             DayOfWeek dayOfWeek,
-            LocalTime starTime,
+            LocalTime startTime,
             LocalTime endTime
     ) {
         this.barber = validateBarber(barber);
         this.dayOfWeek = validateDayOfWeek(dayOfWeek);
         validateTimeRange(startTime, endTime);
-        this.startTime = starTime;
+        this.startTime = startTime;
         this.endTime = endTime;
     }
 
     public Long getId()             {return id;}
     public Barber getBarber()       {return barber;}
     public DayOfWeek getDayOfWeek() {return dayOfWeek;}
-    public LocalTime getStarTime()  {return startTime;}
+    public LocalTime getStartTime() {return startTime;}
     public LocalTime getEndTime()   {return endTime;}
 
     public void changeTimeRange(
-            LocalTime starTime,
+            LocalTime startTime,
             LocalTime endTime
     ) {
         validateTimeRange(startTime, endTime);
-        this.startTime = starTime;
+        this.startTime = startTime;
         this.endTime = endTime;
     }
     private static Barber validateBarber(Barber barber) {

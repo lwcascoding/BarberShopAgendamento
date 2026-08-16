@@ -76,10 +76,19 @@ public class BarberService {
         return BarberMapper.toResponse(barber);
     }
 
+    @Transactional(readOnly = true)
+    public List<BarberResponse> findAllActive() {
+        return barberRepository
+                .findAllByActiveTrueOrderByNameAsc()
+                .stream()
+                .map(BarberMapper::toResponse)
+                .toList();
+    }
+
     private Barber findBarberById(Long id) {
         return barberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Barber not foud with id" + id
+                        "Barber not found with id: " + id
                 ));
     }
 }
