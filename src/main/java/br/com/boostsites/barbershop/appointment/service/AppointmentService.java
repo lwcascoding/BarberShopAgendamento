@@ -9,6 +9,7 @@ import br.com.boostsites.barbershop.availability.domain.BarberAvailability;
 import br.com.boostsites.barbershop.availability.repository.BarberAvailabilityRepository;
 import br.com.boostsites.barbershop.barber.domain.Barber;
 import br.com.boostsites.barbershop.barber.repository.BarberRepository;
+import br.com.boostsites.barbershop.catalog.domain.BarbershopService;
 import br.com.boostsites.barbershop.customer.domain.Customer;
 import br.com.boostsites.barbershop.customer.repository.CustomerRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -42,11 +43,15 @@ public class AppointmentService {
     public Appointment create(
             Long barberId,
             Long customerId,
-            LocalDateTime startTime,
-            LocalDateTime endTime
+            String serviceCode,
+            LocalDateTime startTime
     ) {
         Barber barber = findBarber(barberId);
         Customer customer = findCustomer(customerId);
+        BarbershopService service = BarbershopService.fromCode(serviceCode);
+        LocalDateTime endTime = startTime == null
+                ? null
+                : startTime.plusMinutes(service.getDurationMinutes());
 
         validateAvailability(
                 barberId,
@@ -60,11 +65,11 @@ public class AppointmentService {
                 endTime
         );
 
-        Appointment appointment = new Appointment(
+        Appointment appointment = Appointment.schedule(
                 barber,
                 customer,
-                startTime,
-                endTime
+                service,
+                startTime
         );
 
         return appointmentRepository.save(appointment);
@@ -80,11 +85,40 @@ public class AppointmentService {
         return appointmentRepository.findAllByOrderByStartTimeAsc();
     }
 
+    @Transactional(readOnly = true)
+    public List<Appointment> findByCustomerPhone(String phone) {
+        if (phone == null || phone.isBlank()) {
+            return List.of();
+        }
+
+        return appointmentRepository
+                .findByCustomerPhoneOrderByStartTimeDesc(phone.trim());
+    }
+
+    @Transactional(readOnly = true)
+    public Appointment findNextScheduled(LocalDateTime from) {
+        return appointmentRepository
+                .findFirstByStatusAndStartTimeGreaterThanEqualOrderByStartTimeAsc(
+                        AppointmentStatus.SCHEDULED,
+                        from
+                )
+                .orElse(null);
+    }
+
     @Transactional
     public Appointment cancel(Long id) {
         Appointment appointment = findAppointment(id);
 
         appointment.cancel();
+
+        return appointment;
+    }
+
+    @Transactional
+    public Appointment complete(Long id) {
+        Appointment appointment = findAppointment(id);
+
+        appointment.complete();
 
         return appointment;
     }

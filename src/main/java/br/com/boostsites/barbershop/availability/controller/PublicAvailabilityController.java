@@ -6,6 +6,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -27,12 +30,18 @@ public class PublicAvailabilityController {
 
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate date
+            LocalDate date,
+
+            @RequestParam(defaultValue = "30")
+            @Min(15)
+            @Max(180)
+            int durationMinutes
     ) {
         List<AvailableSlotResponse> slots =
                 availabilityService.findAvailableSlots(
                         barberId,
-                        date
+                        date,
+                        durationMinutes
                 );
 
         return ResponseEntity.ok(slots);

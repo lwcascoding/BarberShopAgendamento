@@ -4,9 +4,11 @@ import br.com.boostsites.barbershop.appointment.domain.Appointment;
 import br.com.boostsites.barbershop.appointment.dto.request.CreateAppointmentRequest;
 import br.com.boostsites.barbershop.appointment.dto.request.RescheduleAppointmentRequest;
 import br.com.boostsites.barbershop.appointment.dto.response.AppointmentResponse;
+import br.com.boostsites.barbershop.appointment.dto.response.UpcomingAppointmentResponse;
 import br.com.boostsites.barbershop.appointment.service.AppointmentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,8 +33,8 @@ public class AppointmentController {
         Appointment appointment = appointmentService.create(
                 request.barberId(),
                 request.customerId(),
-                request.startTime(),
-                request.endTime()
+                request.serviceCode(),
+                request.startTime()
         );
 
         return toResponse(appointment);
@@ -47,9 +49,29 @@ public class AppointmentController {
         );
     }
 
+    @GetMapping("/upcoming")
+    public ResponseEntity<UpcomingAppointmentResponse> findUpcoming() {
+        Appointment appointment = appointmentService.findNextScheduled(
+                java.time.LocalDateTime.now()
+        );
+
+        if (appointment == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(new UpcomingAppointmentResponse(
+                appointment.getId(),
+                appointment.getBarber().getName(),
+                appointment.getServiceName(),
+                appointment.getStartTime()
+        ));
+    }
+
     @GetMapping
-    public List<AppointmentResponse> findAll() {
-        return appointmentService.findAll()
+    public List<AppointmentResponse> findByCustomerPhone(
+            @RequestParam String phone
+    ) {
+        return appointmentService.findByCustomerPhone(phone)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -85,7 +107,14 @@ public class AppointmentController {
         return new AppointmentResponse(
                 appointment.getId(),
                 appointment.getBarber().getId(),
+                appointment.getBarber().getName(),
                 appointment.getCustomer().getId(),
+                appointment.getCustomer().getName(),
+                appointment.getCustomer().getPhone(),
+                appointment.getServiceCode(),
+                appointment.getServiceName(),
+                appointment.getServicePrice(),
+                appointment.getDurationMinutes(),
                 appointment.getStartTime(),
                 appointment.getEndTime(),
                 appointment.getStatus()

@@ -41,6 +41,13 @@ O projeto foi desenvolvido com foco em **Clean Code, Effective Java, segurança,
 * Jakarta Bean Validation
 * Maven
 
+### Frontend
+
+* JavaScript
+* Vite
+* HTML e CSS responsivos
+* Integração com a API REST
+
 ### Banco de dados
 
 * PostgreSQL
@@ -145,6 +152,18 @@ No Windows:
 ```bash
 mvnw.cmd spring-boot:run
 ```
+
+Em outro terminal, inicie o frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+A aplicação ficará disponível em `http://localhost:5173`. O painel administrativo é acessado exclusivamente por `http://localhost:5173/#admin`.
+
+As credenciais administrativas podem ser configuradas pelas variáveis `ADMIN_USER` e `ADMIN_PASSWORD`. Em ambiente local, os valores padrão são `admin` e `admin123`.
 
 Também é possível executar a infraestrutura utilizando Docker.
 

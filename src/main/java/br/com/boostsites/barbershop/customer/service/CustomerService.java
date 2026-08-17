@@ -23,9 +23,21 @@ public class CustomerService {
 
     @Transactional
     public CustomerResponse create(CreateCustomerRequest request) {
+        Customer existingCustomer = customerRepository
+                .findByPhone(request.phone().trim())
+                .orElse(null);
+
+        if (existingCustomer != null) {
+            if (!existingCustomer.getName().equals(request.name().trim())) {
+                existingCustomer.rename(request.name());
+            }
+
+            return CustomerMapper.toResponse(existingCustomer);
+        }
+
         Customer customer = new Customer(
-                request.name(),
-                request.phone()
+                request.name().trim(),
+                request.phone().trim()
         );
 
         Customer savedCustomer = customerRepository.save(customer);

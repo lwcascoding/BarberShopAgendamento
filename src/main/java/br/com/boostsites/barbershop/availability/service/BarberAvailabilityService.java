@@ -106,6 +106,21 @@ public class BarberAvailabilityService {
             Long barberId,
             LocalDate date
     ) {
+        return findAvailableSlots(barberId, date, SLOT_DURATION_MINUTES);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AvailableSlotResponse> findAvailableSlots(
+            Long barberId,
+            LocalDate date,
+            int durationMinutes
+    ) {
+        if (durationMinutes <= 0) {
+            throw new IllegalArgumentException(
+                    "Duration must be greater than zero"
+            );
+        }
+
         findBarberById(barberId);
 
         List<BarberAvailability> availabilities =
@@ -137,11 +152,11 @@ public class BarberAvailabilityService {
                     date.atTime(availability.getEndTime());
 
             while (!slotStart
-                    .plusMinutes(SLOT_DURATION_MINUTES)
+                    .plusMinutes(durationMinutes)
                     .isAfter(availabilityEnd)) {
 
                 LocalDateTime slotEnd =
-                        slotStart.plusMinutes(SLOT_DURATION_MINUTES);
+                        slotStart.plusMinutes(durationMinutes);
 
                 if (!hasConflict(
                         slotStart,
@@ -156,7 +171,7 @@ public class BarberAvailabilityService {
                     );
                 }
 
-                slotStart = slotEnd;
+                slotStart = slotStart.plusMinutes(SLOT_DURATION_MINUTES);
             }
         }
 

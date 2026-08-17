@@ -1,9 +1,11 @@
 package br.com.boostsites.barbershop.appointment.domain;
 
 import br.com.boostsites.barbershop.barber.domain.Barber;
+import br.com.boostsites.barbershop.catalog.domain.BarbershopService;
 import br.com.boostsites.barbershop.customer.domain.Customer;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,6 +34,18 @@ public class Appointment {
     @Column(nullable = false, length = 20)
     private AppointmentStatus status;
 
+    @Column(name = "service_code", nullable = false, length = 30)
+    private String serviceCode;
+
+    @Column(name = "service_name", nullable = false, length = 100)
+    private String serviceName;
+
+    @Column(name = "service_price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal servicePrice;
+
+    @Column(name = "duration_minutes", nullable = false)
+    private Integer durationMinutes;
+
     protected Appointment() {
     }
 
@@ -41,14 +55,64 @@ public class Appointment {
             LocalDateTime startTime,
             LocalDateTime endTime
     ) {
+        this(
+                barber,
+                customer,
+                BarbershopService.HAIRCUT,
+                startTime,
+                endTime
+        );
+    }
+
+    private Appointment(
+            Barber barber,
+            Customer customer,
+            BarbershopService service,
+            LocalDateTime startTime
+    ) {
+        this(
+                barber,
+                customer,
+                service,
+                startTime,
+                calculateEndTime(startTime, service)
+        );
+    }
+
+    public static Appointment schedule(
+            Barber barber,
+            Customer customer,
+            BarbershopService service,
+            LocalDateTime startTime
+    ) {
+        return new Appointment(
+                barber,
+                customer,
+                service,
+                startTime
+        );
+    }
+
+    private Appointment(
+            Barber barber,
+            Customer customer,
+            BarbershopService service,
+            LocalDateTime startTime,
+            LocalDateTime endTime
+    ) {
         this.barber = validateBarber(barber);
         this.customer = validateCustomer(customer);
+        BarbershopService validService = validateService(service);
 
         validateTimeRange(startTime, endTime);
 
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = AppointmentStatus.SCHEDULED;
+        this.serviceCode = validService.getCode();
+        this.serviceName = validService.getDisplayName();
+        this.servicePrice = validService.getPrice();
+        this.durationMinutes = validService.getDurationMinutes();
     }
 
     public Long getId()                  {return id;}
@@ -57,6 +121,10 @@ public class Appointment {
     public LocalDateTime getStartTime()  {return startTime;}
     public LocalDateTime getEndTime()    {return endTime;}
     public AppointmentStatus getStatus() {return status;}
+    public String getServiceCode()        {return serviceCode;}
+    public String getServiceName()        {return serviceName;}
+    public BigDecimal getServicePrice()   {return servicePrice;}
+    public Integer getDurationMinutes()   {return durationMinutes;}
 
     public void cancel() {
         if (status == AppointmentStatus.COMPLETED) {
@@ -112,6 +180,29 @@ public class Appointment {
         }
 
         return customer;
+    }
+
+    private static BarbershopService validateService(
+            BarbershopService service
+    ) {
+        if (service == null) {
+            throw new IllegalArgumentException(
+                    "Service must not be null"
+            );
+        }
+
+        return service;
+    }
+
+    private static LocalDateTime calculateEndTime(
+            LocalDateTime startTime,
+            BarbershopService service
+    ) {
+        if (startTime == null || service == null) {
+            return null;
+        }
+
+        return startTime.plusMinutes(service.getDurationMinutes());
     }
 
     private static void validateTimeRange(
